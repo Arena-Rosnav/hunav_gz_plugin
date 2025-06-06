@@ -194,6 +194,9 @@ private:
   bool agentsInitialized_;
   bool robotInitialized_;
 
+  /// Global Configuration
+  std::string namespace_;
+
   /// Robot Configuration
   std::string robotName_;
   gz::sim::Entity robotEntity_;

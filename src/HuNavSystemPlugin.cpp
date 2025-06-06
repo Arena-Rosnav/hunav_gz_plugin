@@ -111,7 +111,13 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   //   robotName_ = sdf_->Get<std::string>("robot_name");
   // else
   //   robotName_ = "jackal";
+  if (sdf_->HasElement("namespace"))
+    namespace_ = sdf_->Get<std::string>("namespace");
+  else
+    namespace_ = "/";
 
+  if(namespace_.empty() || namespace_.back() != '/')
+    namespace_.push_back('/');
 
   // frame to publish the position of the agents
   if (sdf_->HasElement("global_frame_to_publish"))
@@ -185,15 +191,15 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   // auto actor = model.ActorByName("actor3");
 
   // service to initialize the agents from the WorldGenerator
-  rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgents>("get_agents");
+  rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgents>(namespace_ + "get_agents");
   //rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgent>("get_agent");
   // regular HuNavSim service to compute the agents
-  rosSrvClient_ = this->rosnode_->create_client<hunav_msgs::srv::ComputeAgents>("compute_agents");
+  rosSrvClient_ = this->rosnode_->create_client<hunav_msgs::srv::ComputeAgents>(namespace_ + "compute_agents");
   //rosSrvClient_ = this->rosnode_->create_client<hunav_msgs::srv::MoveAgent>("move_agent");
 
-  rosSrvResetClient_ = this->rosnode_->create_client<hunav_msgs::srv::ResetAgents>("reset_agents");
+  rosSrvResetClient_ = this->rosnode_->create_client<hunav_msgs::srv::ResetAgents>(namespace_ + "reset_agents");
   //Service to get the Wall Segments for the obstacle avoidance of the Pedestrians
-  wall_client_ = this->rosnode_->create_client<hunav_msgs::srv::GetWalls>("get_walls");
+  wall_client_ = this->rosnode_->create_client<hunav_msgs::srv::GetWalls>(namespace_ + "get_walls");
 
   //Initialize Wall Segments
   try
