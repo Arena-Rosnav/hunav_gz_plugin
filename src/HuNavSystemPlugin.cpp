@@ -189,7 +189,15 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   // auto model = gz::sim::Model(_entity);
   // model.SetWorldPoseCmd(EntityComponentManager &_ecm, const math::Pose3d &_pose)
   // auto actor = model.ActorByName("actor3");
-
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Creating delete_actors service...");
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Namespace: '%s'", namespace_.c_str());
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Full service name will be: '%s'", (namespace_ + "delete_actors").c_str());
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "ROS node name: %s", rosnode_->get_name());
+  delete_actors_service_ = this->rosnode_->create_service<hunav_msgs::srv::DeleteActors>(
+      namespace_ + "delete_actors",
+      std::bind(&HuNavSystemPluginIGN::deleteActorsCallback, this, std::placeholders::_1, std::placeholders::_2)
+  );
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Delete actors service created successfully!");
   // service to initialize the agents from the WorldGenerator
   rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgents>(namespace_ + "get_agents");
   //rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgent>("get_agent");
@@ -982,7 +990,35 @@ if (walls_loaded_ && !cached_wall_segments_.empty())
 //   return true;
 // }
 
-
+void HuNavSystemPluginIGN::deleteActorsCallback(
+    const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request,
+    std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response)
+{
+    (void)request; // Unused parameter
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "=== DELETE ACTORS CALLBACK CALLED ===");
+    
+    std::vector<gz::sim::Entity> actorsToDelete;
+    
+    // Collect all pedestrian actors
+    for (const auto& [entity, agent] : pedestrians_) {
+        actorsToDelete.push_back(entity);
+        gzmsg << "Marking actor " << agent.name << " (entity: " << entity << ") for deletion" << std::endl;
+    }
+    
+    // Clear pedestrians map first to prevent further access
+    pedestrians_.clear();
+    agentsInitialized_ = false;
+    
+    // Store deletion request for next PreUpdate cycle
+    entities_to_delete_ = actorsToDelete;
+    delete_requested_ = true;
+    
+    response->success = true;
+    response->deleted_count = static_cast<int32_t>(actorsToDelete.size());
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Marked %zu actors for deletion", actorsToDelete.size());
+}
 
 /////////////////////////////////////////////////
 /**
@@ -1455,6 +1491,22 @@ void HuNavSystemPluginIGN::updateGazeboPedestrians(gz::sim::EntityComponentManag
  */
 void HuNavSystemPluginIGN::PreUpdate(const gz::sim::UpdateInfo& _info, gz::sim::EntityComponentManager& _ecm)
 {
+
+  // Handle deletion request
+  if (delete_requested_) {
+    gzmsg << "Processing actor deletion request..." << std::endl;
+    
+    for (const auto& entity : entities_to_delete_) {
+      _ecm.RequestRemoveEntity(entity);
+      gzmsg << "Requested removal of entity: " << entity << std::endl;
+    }
+    
+    entities_to_delete_.clear();
+    delete_requested_ = false;
+    
+    gzmsg << "Actor deletion completed" << std::endl;
+    return; // Skip this update cycle
+  }
   //(void)_info;
   //(void)_ecm;
   // std::string st;

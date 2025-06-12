@@ -71,6 +71,7 @@
 #include "hunav_msgs/srv/get_agents.hpp"
 #include "hunav_msgs/srv/reset_agents.hpp"
 #include "hunav_msgs/srv/get_walls.hpp"
+#include "hunav_msgs/srv/delete_actors.hpp"
 //#include "hunav_msgs/srv/move_agent.hpp"
 
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -116,6 +117,8 @@ public:
 
 private:
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+  // Callback für Actor-Deletion
+  void deleteActorsCallback(const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request, std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response);
   /// Helper functions
   void initializeAgents(gz::sim::EntityComponentManager& _ecm);
   void initializeRobot(gz::sim::EntityComponentManager& _ecm);
@@ -129,6 +132,9 @@ private:
 
 
   void fixActorHeight(const hunav_msgs::msg::Agent& ag, gz::math::Pose3d& p);
+
+  std::vector<gz::sim::Entity> entities_to_delete_;
+  bool delete_requested_ = false;
 
   //Wall struct and helper functions/variables
   void loadWallData();
@@ -149,6 +155,8 @@ private:
   std::vector<WallSegment> cached_wall_segments_;
   rclcpp::Client<hunav_msgs::srv::GetWalls>::SharedPtr wall_client_;
   bool walls_loaded_;
+
+  rclcpp::Service<hunav_msgs::srv::DeleteActors>::SharedPtr delete_actors_service_;
 
   rclcpp::Node::SharedPtr rosnode_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ros_test_pub_;
