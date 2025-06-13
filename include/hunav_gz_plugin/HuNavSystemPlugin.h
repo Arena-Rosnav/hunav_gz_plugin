@@ -119,6 +119,7 @@ private:
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   // Callback für Actor-Deletion
   void deleteActorsCallback(const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request, std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response);
+  bool callResetAgentsService();
   /// Helper functions
   void initializeAgents(gz::sim::EntityComponentManager& _ecm);
   void initializeRobot(gz::sim::EntityComponentManager& _ecm);

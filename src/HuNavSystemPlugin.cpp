@@ -990,6 +990,56 @@ if (walls_loaded_ && !cached_wall_segments_.empty())
 //   return true;
 // }
 
+bool HuNavSystemPluginIGN::callResetAgentsService()
+{
+  if (!rosSrvResetClient_) {
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Reset agents service client not available");
+    return false;
+  }
+  
+  try {
+    if (!rosSrvResetClient_->wait_for_service(std::chrono::seconds(5))) {
+      RCLCPP_ERROR(this->rosnode_->get_logger(), "Reset agents service not available within timeout");
+      return false;
+    }
+    
+    auto request = std::make_shared<hunav_msgs::srv::ResetAgents::Request>();
+    
+    // Empty robot and agents - signal for complete reset
+    request->robot.id = 0;
+    request->robot.name = "jackal";
+    request->robot.type = hunav_msgs::msg::Agent::ROBOT;
+    
+    request->current_agents.header.stamp = rosnode_->get_clock()->now();
+    request->current_agents.header.frame_id = "map";
+    request->current_agents.agents.clear(); // Empty = complete reset
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Calling HuNav ResetAgents service...");
+    
+    // Use async call with future
+    auto future = rosSrvResetClient_->async_send_request(request);
+    auto status = future.wait_for(std::chrono::seconds(5));
+    
+    if (status == std::future_status::ready) {
+      auto response = future.get();
+      if (response && response->ok) {
+        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
+        return true;
+      } else {
+        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service failed");
+        return false;
+      }
+    } else {
+      RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service timeout");
+      return false;
+    }
+    
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Error calling ResetAgents service: %s", e.what());
+    return false;
+  }
+}
+
 void HuNavSystemPluginIGN::deleteActorsCallback(
     const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request,
     std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response)
