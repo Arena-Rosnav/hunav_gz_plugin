@@ -136,6 +136,7 @@ private:
 
   std::vector<gz::sim::Entity> entities_to_delete_;
   bool delete_requested_ = false;
+  bool plugin_active_ = true;
 
   //Wall struct and helper functions/variables
   void loadWallData();

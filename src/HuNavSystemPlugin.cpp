@@ -361,8 +361,54 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
     rosPedLastTime_ = this->rosnode_->get_clock()->now();
 
     for (const auto &agent : agents.agents)
-    {
+    {   // Debug Outputs : a real Hero!!:
+
+        // RCLCPP_ERROR(rosnode_->get_logger(), "HUNAVSYSTEMPLUGIN AGENT INITZIALIZATION STARTED ");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "id: %d", agent.id);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "name: %s", agent.name.c_str());
+        // RCLCPP_ERROR(rosnode_->get_logger(), "type: %d", agent.type);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "skin: %d", agent.skin);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "group_id: %d", agent.group_id);
+        
+        // // Position
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.x: %.3f", agent.position.position.x);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.y: %.3f", agent.position.position.y);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.z: %.3f", agent.position.position.z);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "yaw: %.3f", agent.yaw);
+        
+        // // Velocity & Movement
+        // RCLCPP_ERROR(rosnode_->get_logger(), "desired_velocity: %.3f", agent.desired_velocity);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "radius: %.3f", agent.radius);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "linear_vel: %.3f", agent.linear_vel);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "angular_vel: %.3f", agent.angular_vel);
+        
+        // // Behavior
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.type: %d", agent.behavior.type);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.state: %d", agent.behavior.state);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.configuration: %d", agent.behavior.configuration);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.duration: %.2f", agent.behavior.duration);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.once: %s", agent.behavior.once ? "true" : "false");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.vel: %.3f", agent.behavior.vel);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.dist: %.3f", agent.behavior.dist);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.social_force_factor: %.2f", agent.behavior.social_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.goal_force_factor: %.2f", agent.behavior.goal_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.obstacle_force_factor: %.2f", agent.behavior.obstacle_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.other_force_factor: %.2f", agent.behavior.other_force_factor);
+        
+        // Goals
+        // RCLCPP_ERROR(rosnode_->get_logger(), "goals.size(): %zu", agent.goals.size());
+        // for (size_t j = 0; j < agent.goals.size(); j++) {
+        //     RCLCPP_ERROR(rosnode_->get_logger(), "goal[%zu]: x=%.3f, y=%.3f", 
+        //                  j, agent.goals[j].position.x, agent.goals[j].position.y);
+        // }
+        
+        // RCLCPP_ERROR(rosnode_->get_logger(), "cyclic_goals: %s", agent.cyclic_goals ? "true" : "false");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "goal_radius: %.3f", agent.goal_radius);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "closest_obs.size(): %zu", agent.closest_obs.size());
+    
       hunav_msgs::msg::Agent ag = agent;
+
+
       auto agentEntity = _ecm.EntityByComponents(gz::sim::components::Name(agent.name));
       // if (!agentEntity) {
       //   gzmsg << "[HuNavPlugin] Agent '" << agent.name << "' not found in ECM yet, skipping for now." << std::endl;
@@ -529,6 +575,8 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
       ag.position.orientation = tf2::toMsg(myQuaternion);
       ag.yaw = yaw;
       // ignition::math::Vector3d linvel = model->WorldLinearVel();
+      // RCLCPP_ERROR(rosnode_->get_logger(),"hunav_plugin initializeAgents desired_velocity: %.2f",agent.desired_velocity);
+      // RCLCPP_ERROR(rosnode_->get_logger(),"hunav_plugin initializeAgents behavior.goal_force_factor: %.2f",agent.behavior.goal_force_factor);
       ag.desired_velocity = agent.desired_velocity;
       ag.velocity.linear.x = 0.0; //linvel.X();
       ag.velocity.linear.y = 0.0; //linvel.Y();
@@ -1024,6 +1072,7 @@ bool HuNavSystemPluginIGN::callResetAgentsService()
       auto response = future.get();
       if (response && response->ok) {
         RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
+        
         return true;
       } else {
         RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service failed");
