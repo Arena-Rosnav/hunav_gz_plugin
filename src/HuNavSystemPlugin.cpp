@@ -1404,10 +1404,10 @@ void HuNavSystemPluginIGN::updateGazeboPedestrians(gz::sim::EntityComponentManag
     // set the pose of the actor
     actorPose.Pos().X(a.position.position.x);
     actorPose.Pos().Y(a.position.position.y);
-    actorPose.Pos().Z(0.8);
+    actorPose.Pos().Z(0.85);
     //fixActorHeight(a, actorPose);
     // I have to add some pitch to show the agents properly
-    actorPose.Rot() = gz::math::Quaterniond(0, 0.35, yaw);
+    actorPose.Rot() = gz::math::Quaterniond(0, 0.0, yaw);
 
 
     // UPDATE TRAJECTORY POSE
