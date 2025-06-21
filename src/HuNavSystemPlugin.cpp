@@ -189,7 +189,15 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   // auto model = gz::sim::Model(_entity);
   // model.SetWorldPoseCmd(EntityComponentManager &_ecm, const math::Pose3d &_pose)
   // auto actor = model.ActorByName("actor3");
-
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Creating delete_actors service...");
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Namespace: '%s'", namespace_.c_str());
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Full service name will be: '%s'", (namespace_ + "delete_actors").c_str());
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "ROS node name: %s", rosnode_->get_name());
+  delete_actors_service_ = this->rosnode_->create_service<hunav_msgs::srv::DeleteActors>(
+      namespace_ + "delete_actors",
+      std::bind(&HuNavSystemPluginIGN::deleteActorsCallback, this, std::placeholders::_1, std::placeholders::_2)
+  );
+  RCLCPP_ERROR(this->rosnode_->get_logger(), "Delete actors service created successfully!");
   // service to initialize the agents from the WorldGenerator
   rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgents>(namespace_ + "get_agents");
   //rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgent>("get_agent");
@@ -353,8 +361,54 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
     rosPedLastTime_ = this->rosnode_->get_clock()->now();
 
     for (const auto &agent : agents.agents)
-    {
+    {   // Debug Outputs : a real Hero!!:
+
+        // RCLCPP_ERROR(rosnode_->get_logger(), "HUNAVSYSTEMPLUGIN AGENT INITZIALIZATION STARTED ");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "id: %d", agent.id);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "name: %s", agent.name.c_str());
+        // RCLCPP_ERROR(rosnode_->get_logger(), "type: %d", agent.type);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "skin: %d", agent.skin);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "group_id: %d", agent.group_id);
+        
+        // // Position
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.x: %.3f", agent.position.position.x);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.y: %.3f", agent.position.position.y);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "position.z: %.3f", agent.position.position.z);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "yaw: %.3f", agent.yaw);
+        
+        // // Velocity & Movement
+        // RCLCPP_ERROR(rosnode_->get_logger(), "desired_velocity: %.3f", agent.desired_velocity);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "radius: %.3f", agent.radius);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "linear_vel: %.3f", agent.linear_vel);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "angular_vel: %.3f", agent.angular_vel);
+        
+        // // Behavior
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.type: %d", agent.behavior.type);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.state: %d", agent.behavior.state);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.configuration: %d", agent.behavior.configuration);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.duration: %.2f", agent.behavior.duration);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.once: %s", agent.behavior.once ? "true" : "false");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.vel: %.3f", agent.behavior.vel);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.dist: %.3f", agent.behavior.dist);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.social_force_factor: %.2f", agent.behavior.social_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.goal_force_factor: %.2f", agent.behavior.goal_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.obstacle_force_factor: %.2f", agent.behavior.obstacle_force_factor);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "behavior.other_force_factor: %.2f", agent.behavior.other_force_factor);
+        
+        // Goals
+        // RCLCPP_ERROR(rosnode_->get_logger(), "goals.size(): %zu", agent.goals.size());
+        // for (size_t j = 0; j < agent.goals.size(); j++) {
+        //     RCLCPP_ERROR(rosnode_->get_logger(), "goal[%zu]: x=%.3f, y=%.3f", 
+        //                  j, agent.goals[j].position.x, agent.goals[j].position.y);
+        // }
+        
+        // RCLCPP_ERROR(rosnode_->get_logger(), "cyclic_goals: %s", agent.cyclic_goals ? "true" : "false");
+        // RCLCPP_ERROR(rosnode_->get_logger(), "goal_radius: %.3f", agent.goal_radius);
+        // RCLCPP_ERROR(rosnode_->get_logger(), "closest_obs.size(): %zu", agent.closest_obs.size());
+    
       hunav_msgs::msg::Agent ag = agent;
+
+
       auto agentEntity = _ecm.EntityByComponents(gz::sim::components::Name(agent.name));
       // if (!agentEntity) {
       //   gzmsg << "[HuNavPlugin] Agent '" << agent.name << "' not found in ECM yet, skipping for now." << std::endl;
@@ -521,6 +575,8 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
       ag.position.orientation = tf2::toMsg(myQuaternion);
       ag.yaw = yaw;
       // ignition::math::Vector3d linvel = model->WorldLinearVel();
+      // RCLCPP_ERROR(rosnode_->get_logger(),"hunav_plugin initializeAgents desired_velocity: %.2f",agent.desired_velocity);
+      // RCLCPP_ERROR(rosnode_->get_logger(),"hunav_plugin initializeAgents behavior.goal_force_factor: %.2f",agent.behavior.goal_force_factor);
       ag.desired_velocity = agent.desired_velocity;
       ag.velocity.linear.x = 0.0; //linvel.X();
       ag.velocity.linear.y = 0.0; //linvel.Y();
@@ -982,7 +1038,86 @@ if (walls_loaded_ && !cached_wall_segments_.empty())
 //   return true;
 // }
 
+bool HuNavSystemPluginIGN::callResetAgentsService()
+{
+  if (!rosSrvResetClient_) {
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Reset agents service client not available");
+    return false;
+  }
+  
+  try {
+    if (!rosSrvResetClient_->wait_for_service(std::chrono::seconds(5))) {
+      RCLCPP_ERROR(this->rosnode_->get_logger(), "Reset agents service not available within timeout");
+      return false;
+    }
+    
+    auto request = std::make_shared<hunav_msgs::srv::ResetAgents::Request>();
+    
+    // Empty robot and agents - signal for complete reset
+    request->robot.id = 0;
+    request->robot.name = "jackal";
+    request->robot.type = hunav_msgs::msg::Agent::ROBOT;
+    
+    request->current_agents.header.stamp = rosnode_->get_clock()->now();
+    request->current_agents.header.frame_id = "map";
+    request->current_agents.agents.clear(); // Empty = complete reset
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Calling HuNav ResetAgents service...");
+    
+    // Use async call with future
+    auto future = rosSrvResetClient_->async_send_request(request);
+    auto status = future.wait_for(std::chrono::seconds(5));
+    
+    if (status == std::future_status::ready) {
+      auto response = future.get();
+      if (response && response->ok) {
+        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
+        
+        return true;
+      } else {
+        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service failed");
+        return false;
+      }
+    } else {
+      RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service timeout");
+      return false;
+    }
+    
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Error calling ResetAgents service: %s", e.what());
+    return false;
+  }
+}
 
+void HuNavSystemPluginIGN::deleteActorsCallback(
+    const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request,
+    std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response)
+{
+    (void)request; // Unused parameter
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "=== DELETE ACTORS CALLBACK CALLED ===");
+    
+    std::vector<gz::sim::Entity> actorsToDelete;
+    
+    // Collect all pedestrian actors
+    for (const auto& [entity, agent] : pedestrians_) {
+        actorsToDelete.push_back(entity);
+        gzmsg << "Marking actor " << agent.name << " (entity: " << entity << ") for deletion" << std::endl;
+    }
+    
+    // Clear pedestrians map first to prevent further access
+    pedestrians_.clear();
+    agentsInitialized_ = false;
+    
+    // Store deletion request for next PreUpdate cycle
+    entities_to_delete_ = actorsToDelete;
+    delete_requested_ = true;
+    
+    response->success = true;
+    response->deleted_count = static_cast<int32_t>(actorsToDelete.size());
+    
+    RCLCPP_ERROR(this->rosnode_->get_logger(), "Marked %zu actors for deletion", actorsToDelete.size());
+}
 
 /////////////////////////////////////////////////
 /**
@@ -1269,10 +1404,10 @@ void HuNavSystemPluginIGN::updateGazeboPedestrians(gz::sim::EntityComponentManag
     // set the pose of the actor
     actorPose.Pos().X(a.position.position.x);
     actorPose.Pos().Y(a.position.position.y);
-    actorPose.Pos().Z(0.8);
+    actorPose.Pos().Z(0.85);
     //fixActorHeight(a, actorPose);
     // I have to add some pitch to show the agents properly
-    actorPose.Rot() = gz::math::Quaterniond(0, 0.35, yaw);
+    actorPose.Rot() = gz::math::Quaterniond(0, 0.0, yaw);
 
 
     // UPDATE TRAJECTORY POSE
@@ -1455,6 +1590,22 @@ void HuNavSystemPluginIGN::updateGazeboPedestrians(gz::sim::EntityComponentManag
  */
 void HuNavSystemPluginIGN::PreUpdate(const gz::sim::UpdateInfo& _info, gz::sim::EntityComponentManager& _ecm)
 {
+
+  // Handle deletion request
+  if (delete_requested_) {
+    gzmsg << "Processing actor deletion request..." << std::endl;
+    
+    for (const auto& entity : entities_to_delete_) {
+      _ecm.RequestRemoveEntity(entity);
+      gzmsg << "Requested removal of entity: " << entity << std::endl;
+    }
+    
+    entities_to_delete_.clear();
+    delete_requested_ = false;
+    
+    gzmsg << "Actor deletion completed" << std::endl;
+    return; // Skip this update cycle
+  }
   //(void)_info;
   //(void)_ecm;
   // std::string st;
