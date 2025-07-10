@@ -189,15 +189,15 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   // auto model = gz::sim::Model(_entity);
   // model.SetWorldPoseCmd(EntityComponentManager &_ecm, const math::Pose3d &_pose)
   // auto actor = model.ActorByName("actor3");
-  RCLCPP_ERROR(this->rosnode_->get_logger(), "Creating delete_actors service...");
-  RCLCPP_ERROR(this->rosnode_->get_logger(), "Namespace: '%s'", namespace_.c_str());
-  RCLCPP_ERROR(this->rosnode_->get_logger(), "Full service name will be: '%s'", (namespace_ + "delete_actors").c_str());
-  RCLCPP_ERROR(this->rosnode_->get_logger(), "ROS node name: %s", rosnode_->get_name());
+  RCLCPP_INFO(this->rosnode_->get_logger(), "Creating delete_actors service...");
+  RCLCPP_INFO(this->rosnode_->get_logger(), "Namespace: '%s'", namespace_.c_str());
+  RCLCPP_INFO(this->rosnode_->get_logger(), "Full service name will be: '%s'", (namespace_ + "delete_actors").c_str());
+  RCLCPP_INFO(this->rosnode_->get_logger(), "ROS node name: %s", rosnode_->get_name());
   delete_actors_service_ = this->rosnode_->create_service<hunav_msgs::srv::DeleteActors>(
       namespace_ + "delete_actors",
       std::bind(&HuNavSystemPluginIGN::deleteActorsCallback, this, std::placeholders::_1, std::placeholders::_2)
   );
-  RCLCPP_ERROR(this->rosnode_->get_logger(), "Delete actors service created successfully!");
+  RCLCPP_INFO(this->rosnode_->get_logger(), "Delete actors service created successfully!");
   // service to initialize the agents from the WorldGenerator
   rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgents>(namespace_ + "get_agents");
   //rosSrvGetAgentsClient_ = this->rosnode_->create_client<hunav_msgs::srv::GetAgent>("get_agent");
@@ -344,7 +344,7 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
     }
     RCLCPP_WARN(rosnode_->get_logger(), "service /get_agents not available, waiting again...");
   }
-  RCLCPP_INFO(rosnode_->get_logger(), "Service /get_agents is available. Calling service...");
+  RCLCPP_DEBUG(rosnode_->get_logger(), "Service /get_agents is available. Calling service...");
   // Call the service
   auto result = rosSrvGetAgentsClient_->async_send_request(request);
   //std::chrono::duration<int, std::milli> ms(4000);
@@ -355,7 +355,7 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
     // Initialize the actors
     auto res = *result.get();
     const hunav_msgs::msg::Agents agents = res.agents;
-    RCLCPP_INFO(this->rosnode_->get_logger(), "Received %i agents from service /get_agents", (int)agents.agents.size());                  // 15 AGENTS RECEIVED SO HERE EVERYTHING IS FINE !!!
+    RCLCPP_DEBUG(this->rosnode_->get_logger(), "Received %i agents from service /get_agents", (int)agents.agents.size());                  // 15 AGENTS RECEIVED SO HERE EVERYTHING IS FINE !!!
     pedestrians_.clear();
     pedLastTime_ = std::chrono::steady_clock::now();
     rosPedLastTime_ = this->rosnode_->get_clock()->now();
@@ -423,7 +423,7 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
       auto actorComp = _ecm.Component<gz::sim::components::Actor>(agentEntity);
       if (!actorComp)
       {
-        gzerr << "Entity [" << agentEntity << "] is not an actor." << std::endl;
+        // gzerr << "Entity [" << agentEntity << "] is not an actor." << std::endl;
         return;
       }
 
@@ -586,8 +586,7 @@ void HuNavSystemPluginIGN::initializeAgents(gz::sim::EntityComponentManager& _ec
       ag.angular_vel = 0.0; // angvel.Z();
 
       pedestrians_[agentEntity] = ag;
-      RCLCPP_INFO(rosnode_->get_logger(),
-                  "Properties of agent %s initialized", ag.name.c_str());
+      RCLCPP_DEBUG(rosnode_->get_logger(), "Properties of agent %s initialized", ag.name.c_str());
     }
   }
   else
@@ -1062,7 +1061,7 @@ bool HuNavSystemPluginIGN::callResetAgentsService()
     request->current_agents.header.frame_id = "map";
     request->current_agents.agents.clear(); // Empty = complete reset
     
-    RCLCPP_ERROR(this->rosnode_->get_logger(), "Calling HuNav ResetAgents service...");
+    RCLCPP_INFO(this->rosnode_->get_logger(), "Calling HuNav ResetAgents service...");
     
     // Use async call with future
     auto future = rosSrvResetClient_->async_send_request(request);
@@ -1071,7 +1070,7 @@ bool HuNavSystemPluginIGN::callResetAgentsService()
     if (status == std::future_status::ready) {
       auto response = future.get();
       if (response && response->ok) {
-        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
+        RCLCPP_INFO(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
         
         return true;
       } else {
@@ -1095,7 +1094,7 @@ void HuNavSystemPluginIGN::deleteActorsCallback(
 {
     (void)request; // Unused parameter
     
-    RCLCPP_ERROR(this->rosnode_->get_logger(), "=== DELETE ACTORS CALLBACK CALLED ===");
+    RCLCPP_INFO(this->rosnode_->get_logger(), "=== DELETE ACTORS CALLBACK CALLED ===");
     
     std::vector<gz::sim::Entity> actorsToDelete;
     
@@ -1116,7 +1115,7 @@ void HuNavSystemPluginIGN::deleteActorsCallback(
     response->success = true;
     response->deleted_count = static_cast<int32_t>(actorsToDelete.size());
     
-    RCLCPP_ERROR(this->rosnode_->get_logger(), "Marked %zu actors for deletion", actorsToDelete.size());
+    RCLCPP_INFO(this->rosnode_->get_logger(), "Marked %zu actors for deletion", actorsToDelete.size());
 }
 
 /////////////////////////////////////////////////
