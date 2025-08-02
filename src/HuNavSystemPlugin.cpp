@@ -149,10 +149,10 @@ void HuNavSystemPluginIGN::Configure(const gz::sim::Entity& _entity, const std::
   RCLCPP_INFO(this->rosnode_->get_logger(), "Subscribed to %s", full_topic.c_str());
 
   RCLCPP_INFO(this->rosnode_->get_logger(), "Creating delete_actors service...");
-  delete_actors_service_ = this->rosnode_->create_service<hunav_msgs::srv::DeleteActors>(
-      namespace_ + "delete_actors",
-      std::bind(&HuNavSystemPluginIGN::deleteActorsCallback, this, std::placeholders::_1, std::placeholders::_2)
-  );
+  delete_actors_service_ = this->rosnode_->create_service<arena_people_msgs::srv::DeleteActors>(
+    namespace_ + "delete_actors",
+    std::bind(&HuNavSystemPluginIGN::deleteActorsCallback, this, std::placeholders::_1, std::placeholders::_2)
+);
   
   rosSrvResetClient_ = this->rosnode_->create_client<hunav_msgs::srv::ResetAgents>(namespace_ + "reset_agents");
   
@@ -233,7 +233,7 @@ void HuNavSystemPluginIGN::getObstaclesFromArenaPeds(const gz::sim::EntityCompon
   // Use current_pedestrians_ data (EXACTLY like HumanSystemPlugin!)
   for (const auto& ped : current_pedestrians_->pedestrians)
   {
-    double minDist = 5.0;
+    double minDist = 7.0;
     
     // Create agent position from arena_peds data
     gz::math::Vector3d actor_pos(ped.position.position.x, ped.position.position.y, ped.position.position.z);
@@ -384,7 +384,7 @@ bool HuNavSystemPluginIGN::callResetAgentsService()
     if (status == std::future_status::ready) {
       auto response = future.get();
       if (response && response->ok) {
-        RCLCPP_INFO(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
+        RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service successful");
         return true;
       } else {
         RCLCPP_ERROR(this->rosnode_->get_logger(), "HuNav ResetAgents service failed");
@@ -402,8 +402,8 @@ bool HuNavSystemPluginIGN::callResetAgentsService()
 }
 
 void HuNavSystemPluginIGN::deleteActorsCallback(
-    const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request,
-    std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response)
+    const std::shared_ptr<arena_people_msgs::srv::DeleteActors::Request> request,
+    std::shared_ptr<arena_people_msgs::srv::DeleteActors::Response> response)
 {
     (void)request;
     
@@ -422,7 +422,7 @@ void HuNavSystemPluginIGN::PreUpdate(const gz::sim::UpdateInfo& _info, gz::sim::
 {
   // Spin ROS node to process callbacks (LIKE HumanSystemPlugin!)
   rclcpp::spin_some(rosnode_);
-
+  
   counter_++;
 
   if (_info.paused) {

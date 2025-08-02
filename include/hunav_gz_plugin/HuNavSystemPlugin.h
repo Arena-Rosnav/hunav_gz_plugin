@@ -76,6 +76,7 @@
 
 #include <arena_people_msgs/msg/pedestrians.hpp>
 #include <arena_people_msgs/msg/pedestrian.hpp>
+#include "arena_people_msgs/srv/delete_actors.hpp" 
 
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -125,7 +126,7 @@ private:
   void arenaPedsCallback(const arena_people_msgs::msg::Pedestrians::SharedPtr msg);
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   // Callback für Actor-Deletion
-  void deleteActorsCallback(const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request, std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response);
+  void deleteActorsCallback(const std::shared_ptr<arena_people_msgs::srv::DeleteActors::Request> request, std::shared_ptr<arena_people_msgs::srv::DeleteActors::Response> response);
   bool callResetAgentsService();
   /// Helper functions
   void initializeAgents(gz::sim::EntityComponentManager& _ecm);
@@ -171,7 +172,7 @@ private:
   rclcpp::Client<hunav_msgs::srv::GetWalls>::SharedPtr wall_client_;
   bool walls_loaded_;
 
-  rclcpp::Service<hunav_msgs::srv::DeleteActors>::SharedPtr delete_actors_service_;
+  rclcpp::Service<arena_people_msgs::srv::DeleteActors>::SharedPtr delete_actors_service_;
 
   rclcpp::Node::SharedPtr rosnode_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ros_test_pub_;
