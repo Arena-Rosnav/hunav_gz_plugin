@@ -14,6 +14,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(hunav_msgs REQUIRED)
+find_package(arena_people_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -37,6 +38,7 @@ ament_target_dependencies(HuNavSystemPluginIGN
   tf2_geometry_msgs
   tf2_ros  
   hunav_msgs
+  arena_people_msgs
   gz-sim8
 )
 target_link_libraries(HuNavSystemPluginIGN
