@@ -74,6 +74,10 @@
 #include "hunav_msgs/srv/delete_actors.hpp"
 //#include "hunav_msgs/srv/move_agent.hpp"
 
+#include <arena_people_msgs/msg/pedestrians.hpp>
+#include <arena_people_msgs/msg/pedestrian.hpp>
+#include "arena_people_msgs/srv/delete_actors.hpp" 
+
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -116,9 +120,13 @@ public:
   // void goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
 private:
+  void publishObstacles();
+  void getObstaclesFromArenaPeds(const gz::sim::EntityComponentManager& _ecm);
+  void pedestriansCallback(const arena_people_msgs::msg::Pedestrians::SharedPtr msg);
+  void arenaPedsCallback(const arena_people_msgs::msg::Pedestrians::SharedPtr msg);
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   // Callback für Actor-Deletion
-  void deleteActorsCallback(const std::shared_ptr<hunav_msgs::srv::DeleteActors::Request> request, std::shared_ptr<hunav_msgs::srv::DeleteActors::Response> response);
+  void deleteActorsCallback(const std::shared_ptr<arena_people_msgs::srv::DeleteActors::Request> request, std::shared_ptr<arena_people_msgs::srv::DeleteActors::Response> response);
   bool callResetAgentsService();
   /// Helper functions
   void initializeAgents(gz::sim::EntityComponentManager& _ecm);
@@ -154,11 +162,17 @@ private:
           , center((_start + _end) / 2.0) {}
   };
 
+  rclcpp::Publisher<hunav_msgs::msg::Agents>::SharedPtr obstacle_pub_;
+  rclcpp::Subscription<arena_people_msgs::msg::Pedestrians>::SharedPtr pedestrians_sub_;
+  arena_people_msgs::msg::Pedestrians::SharedPtr current_pedestrians_;
+  std::unordered_map<std::string, std::vector<geometry_msgs::msg::Point>> obstacle_data_;
+
+
   std::vector<WallSegment> cached_wall_segments_;
   rclcpp::Client<hunav_msgs::srv::GetWalls>::SharedPtr wall_client_;
   bool walls_loaded_;
 
-  rclcpp::Service<hunav_msgs::srv::DeleteActors>::SharedPtr delete_actors_service_;
+  rclcpp::Service<arena_people_msgs::srv::DeleteActors>::SharedPtr delete_actors_service_;
 
   rclcpp::Node::SharedPtr rosnode_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ros_test_pub_;
