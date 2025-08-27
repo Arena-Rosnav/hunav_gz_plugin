@@ -236,8 +236,8 @@ void HuNavSystemPluginIGN::getObstaclesFromArenaPeds(const gz::sim::EntityCompon
     double minDist = 7.0;
     
     // Create agent position from arena_peds data
-    gz::math::Vector3d actor_pos(ped.position.position.x, ped.position.position.y, ped.position.position.z);
-    
+    gz::math::Vector3d actor_pos(ped.pose.position.x, ped.pose.position.y, ped.pose.position.z);
+
     // Clear previous obstacles for this pedestrian
     obstacle_data_[ped.name].clear();
 
